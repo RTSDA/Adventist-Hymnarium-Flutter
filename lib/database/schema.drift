@@ -1,0 +1,49 @@
+-- Define main tables
+
+CREATE TABLE hymns (
+  number INTEGER NOT NULL,
+  title TEXT,
+  content TEXT,
+  hymnal_type TEXT,
+  is_favorite BOOLEAN,
+  PRIMARY KEY (number, hymnal_type)
+);
+
+CREATE TABLE responsive_readings (
+  number INTEGER PRIMARY KEY NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  is_favorite BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE thematic_lists (
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  thematic TEXT NOT NULL,
+  hymnal_type TEXT NOT NULL
+);
+
+CREATE TABLE thematic_ambits (
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  ambit TEXT NOT NULL,
+  start_number INTEGER NOT NULL,
+  end_number INTEGER NOT NULL,
+  thematic_list_id INTEGER NOT NULL REFERENCES thematic_lists(id)
+);
+
+-- Define FTS5 virtual tables
+-- content='table_name' specifies the table whose content is indexed
+-- We specify the columns from the original table to index
+
+CREATE VIRTUAL TABLE hymns_fts USING fts5 (
+  title,
+  content,
+  content='hymns',
+  content_rowid='rowid' -- Links fts entry to original table rowid
+);
+
+CREATE VIRTUAL TABLE readings_fts USING fts5 (
+  title,
+  content,
+  content='responsive_readings',
+  content_rowid='rowid'
+); 

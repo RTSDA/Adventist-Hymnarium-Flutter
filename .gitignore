@@ -1,0 +1,113 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# Reference folder (contains iOS version)
+/ref/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Flutter build outputs
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE specific files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+
+# Dependency files (lock files should be committed)
+# pubspec.lock should be committed
+# Generated code (often good to commit, but can be excluded if always regenerated)
+# **/*.g.dart
+# **/*.freezed.dart
+
+# Sensitive files (if any - add specific names)
+# .env
+
+# Crash reports & logs
+*.log
+crash_reports/
+coverage/
+
+# Android build outputs
+android/.gradle/
+android/app/build/
+android/build/
+android/app/google-services.json # Typically fetched/placed manually, shouldn't be committed
+
+# iOS build outputs
+ios/Pods/
+ios/Runner/GeneratedPluginRegistrant.*
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/app.flx
+ios/Flutter/flutter_assets/
+ios/Flutter/App.framework/App
+ios/DerivedData/
+
+# macOS build outputs
+macos/Pods/
+macos/Runner/GeneratedPluginRegistrant.*
+macos/.symlinks/
+macos/Flutter/Flutter.framework
+macos/Flutter/Flutter.podspec
+macos/Flutter/ephemeral
+macos/Flutter/app.flx
+macos/Flutter/flutter_assets/
+macos/Flutter/App.framework/App
+macos/DerivedData/
+
+# Linux build outputs
+linux/flutter/generated_plugin_registrant.*
+linux/flutter/ephemeral
+
+# Windows build outputs
+windows/flutter/generated_plugin_registrant.*
+windows/flutter/ephemeral
