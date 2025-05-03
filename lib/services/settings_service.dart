@@ -20,7 +20,7 @@ import 'dart:math'; // For temporary filename generation
 class AppDefaults {
   static const double defaultFontSize = 16.0;
   static const double minFontSize = 12.0;
-  static const double maxFontSize = 30.0;
+  static const double maxFontSize = 60.0;
   static const bool defaultShowVerseNumbers = true;
   static const bool defaultKeepScreenOn = true;
   static const bool defaultShowMiniPlayer = true;

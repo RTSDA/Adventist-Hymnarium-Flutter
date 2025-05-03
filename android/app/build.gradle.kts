@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.adventist_hymnarium"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // ndkVersion = flutter.ndkVersion // Commented out or removed
+    ndkVersion = "27.0.12077973" // Explicitly set NDK version
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

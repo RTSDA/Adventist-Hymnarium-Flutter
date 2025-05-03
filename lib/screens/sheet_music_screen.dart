@@ -1,3 +1,5 @@
+import 'dart:io'; // Import for Platform check
+import 'package:flutter/foundation.dart' show kIsWeb; // For platform detection
 import 'dart:typed_data';
 import 'package:adventist_hymnarium/database/database.dart';
 import 'package:adventist_hymnarium/locator.dart';
@@ -24,11 +26,29 @@ class _SheetMusicScreenState extends State<SheetMusicScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   int _currentPage = 0;
+  late PageController _pageController;
+  late PhotoViewController _photoViewController;
+
+  // Define reasonable absolute min/max scale bounds
+  static const double _minScale = 0.5;
+  static const double _maxScale = 5.0;
+
+  // Determine if we are on a desktop platform
+  bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentPage);
+    _photoViewController = PhotoViewController();
     _loadSheetMusic();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _photoViewController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSheetMusic() async {
@@ -104,6 +124,14 @@ class _SheetMusicScreenState extends State<SheetMusicScreen> {
     }
   }
 
+  void _goToPage(int pageIndex) {
+    _pageController.animateToPage(
+      pageIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,31 +166,134 @@ class _SheetMusicScreenState extends State<SheetMusicScreen> {
       return const Center(child: Text('No sheet music images found.'));
     }
 
+    bool canGoBack = _currentPage > 0;
+    bool canGoForward = _currentPage < _imageData.length - 1;
+
     // Use PhotoViewGallery for swipeable, zoomable images
-    return PhotoViewGallery.builder(
-      itemCount: _imageData.length,
-      builder: (context, index) {
-        return PhotoViewGalleryPageOptions(
-          imageProvider: MemoryImage(_imageData[index]),
-          initialScale: PhotoViewComputedScale.contained * 0.95, // Start slightly zoomed out
-          minScale: PhotoViewComputedScale.contained * 0.8,
-          maxScale: PhotoViewComputedScale.covered * 4.0, // Allow zooming in significantly
-          heroAttributes: PhotoViewHeroAttributes(tag: "sheet_music_$index"),
-        );
-      },
-      scrollPhysics: const BouncingScrollPhysics(),
-      backgroundDecoration: BoxDecoration(
-        color: Theme.of(context).canvasColor, // Use theme background
-      ),
-      pageController: PageController(initialPage: _currentPage), // Control current page
-      onPageChanged: (index) {
-        setState(() {
-          _currentPage = index;
-        });
-      },
-      loadingBuilder: (context, event) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+    return Stack(
+      children: [
+        PhotoViewGallery.builder(
+          itemCount: _imageData.length,
+          builder: (context, index) {
+            // Wrap MemoryImage in Image.memory and set filterQuality
+            final imageWidget = Image.memory(
+              _imageData[index],
+              filterQuality: FilterQuality.medium, // Or FilterQuality.high
+              gaplessPlayback: true, // Prevents flicker during zoom/pan
+            );
+            
+            return PhotoViewGalleryPageOptions.customChild(
+              child: imageWidget, // Use the Image widget
+              controller: _photoViewController,
+              // Keep other existing options like scales and heroAttributes
+              initialScale: PhotoViewComputedScale.contained * 0.95, 
+              minScale: PhotoViewComputedScale.contained * 0.8,
+              maxScale: PhotoViewComputedScale.covered * 4.0, 
+              heroAttributes: PhotoViewHeroAttributes(tag: "sheet_music_$index"),
+            );
+          },
+          scrollPhysics: const BouncingScrollPhysics(),
+          backgroundDecoration: BoxDecoration(
+            color: Theme.of(context).canvasColor, // Use theme background
+          ),
+          pageController: _pageController, // Use the state's controller
+          onPageChanged: (index) {
+            setState(() {
+              _currentPage = index;
+              _photoViewController.scale = null;
+            });
+          },
+          loadingBuilder: (context, event) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        // --- Navigation Buttons ---
+        // Conditionally build buttons only if there's more than one page
+        if (_imageData.length > 1) ...[
+          // Left Button
+          Positioned(
+            left: 10,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.4), // Semi-transparent background
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new), // Use _new variant for potentially better centering
+                  color: Colors.white, // White icon for contrast
+                  iconSize: _isDesktop ? 30 : 24, // Adjusted size for background
+                  tooltip: 'Previous Page',
+                  onPressed: canGoBack ? () => _goToPage(_currentPage - 1) : null,
+                ),
+              ),
+            ),
+          ),
+          // Right Button
+          Positioned(
+            right: 10,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.4),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios), 
+                  color: Colors.white,
+                  iconSize: _isDesktop ? 30 : 24, // Adjusted size for background
+                  tooltip: 'Next Page',
+                  onPressed: canGoForward ? () => _goToPage(_currentPage + 1) : null,
+                ),
+              ),
+            ),
+          ),
+        ],
+        // --- End Navigation Buttons ---
+
+        // --- Zoom Buttons ---
+        Positioned(
+          bottom: 20,
+          right: 10,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton(
+                mini: true,
+                heroTag: 'zoom_in_button', // Unique heroTag
+                tooltip: 'Zoom In',
+                onPressed: () {
+                  // Use ?.toDouble() for safe casting and ?? for default
+                  double currentScale = (_photoViewController.scale?.toDouble() ?? 1.0);
+                  double newScale = currentScale * 1.2; // Increase scale by 20%
+                  // Clamp using defined constants and cast result to double
+                  _photoViewController.scale = newScale.clamp(_minScale, _maxScale).toDouble();
+                },
+                child: const Icon(Icons.add),
+              ),
+              const SizedBox(height: 8),
+              FloatingActionButton(
+                mini: true,
+                heroTag: 'zoom_out_button', // Unique heroTag
+                tooltip: 'Zoom Out',
+                onPressed: () {
+                   // Use ?.toDouble() for safe casting and ?? for default
+                  double currentScale = (_photoViewController.scale?.toDouble() ?? 1.0);
+                  double newScale = currentScale / 1.2; // Decrease scale by 20% (approx)
+                  // Clamp using defined constants and cast result to double
+                   _photoViewController.scale = newScale.clamp(_minScale, _maxScale).toDouble();
+                },
+                child: const Icon(Icons.remove),
+              ),
+            ],
+          ),
+        ),
+        // --- End Zoom Buttons ---
+      ],
     );
   }
 } 

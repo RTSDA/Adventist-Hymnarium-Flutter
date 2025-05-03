@@ -204,7 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                        value: settingsService.fontSize,
                        min: AppDefaults.minFontSize,
                        max: AppDefaults.maxFontSize,
-                       divisions: (AppDefaults.maxFontSize - AppDefaults.minFontSize).toInt(), // For steps of 1.0
+                       divisions: (AppDefaults.maxFontSize - AppDefaults.minFontSize).toInt(),
                        label: settingsService.fontSize.round().toString(),
                        onChanged: (double value) {
                          context.read<SettingsService>().setFontSize(value);
